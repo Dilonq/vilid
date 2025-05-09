@@ -1,0 +1,15 @@
+{
+  "itemgroup.vilid.vilid": "Villager Ideology",
+
+  "item.vilid.good": "Positive Propaganda",
+  "item.vilid.bad": "Negative Propaganda",
+  "item.vilid.left": "Left-Wing Propaganda",
+  "item.vilid.right": "Right-Wing Propaganda",
+  "item.vilid.dumbifyer": "Dumbifyer",
+  "item.vilid.educator": "Educator",
+  "item.vilid.poller": "Polling Sheet",
+
+  "block.vilid.desk": "Desk",
+
+  "entity.minecraft.villager.teacher": "Teacher"
+}
