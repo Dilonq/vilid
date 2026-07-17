@@ -13,11 +13,11 @@ import net.minecraft.util.Identifier;
 import com.mojang.datafixers.util.Pair;
 
 public class ModActivities {
-    public static final Activity LEARN = new Activity("learn");
-
-    public static void register(){
-        Registry.register(Registries.ACTIVITY, new Identifier(Vilid.MOD_ID,"learn"),LEARN);
-    }
+//    public static final Activity LEARN = new Activity("learn");
+//
+//    public static void register(){
+//        Registry.register(Registries.ACTIVITY, new Identifier(Vilid.MOD_ID,"learn"),LEARN);
+//    }
 
 //    public static ImmutableList<com.mojang.datafixers.util.Pair<Integer, ? extends Task<? super VillagerEntity>>> createLearnTasks() {
 //        return ImmutableList.of(

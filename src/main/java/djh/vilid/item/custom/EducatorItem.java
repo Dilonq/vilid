@@ -1,5 +1,6 @@
 package djh.vilid.item.custom;
 
+import djh.vilid.ideology.politics.Ideology;
 import djh.vilid.villager.VillagerExt;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.passive.VillagerEntity;
@@ -23,6 +24,7 @@ public class EducatorItem extends Item {
                 VillagerExt ext = (VillagerExt) entity;
                 if (villager.getVillagerData().getProfession().equals(VillagerProfession.NITWIT)){
                     villager.setVillagerData(villager.getVillagerData().withProfession(VillagerProfession.NONE));
+                    ext.getViewpoint().setIdeology(Ideology.MODERATE);
                     if (!user.isCreative()){stack.decrement(1);}
                 }
 

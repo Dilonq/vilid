@@ -3,9 +3,9 @@
 	"id": "vilid",
 	"version": "${version}",
 	"name": "vilid",
-	"description": "This is an example description! Tell everyone what your mod is about!",
+	"description": "Introduces politics to villagers",
 	"authors": [
-		"Me!"
+		"dfens99"
 	],
 	"contact": {
 		"homepage": "https://fabricmc.net/",
@@ -20,6 +20,9 @@
 		],
 		"fabric-datagen": [
 			"djh.vilid.VilidDataGenerator"
+		],
+		"client": [
+			"djh.vilid.client.VilidClient"
 		]
 	},
 	"mixins": [

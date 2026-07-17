@@ -1,5 +1,6 @@
 package djh.vilid.item.custom;
 
+import djh.vilid.ideology.politics.Ideology;
 import djh.vilid.villager.VillagerExt;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.passive.VillagerEntity;
@@ -9,6 +10,8 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.village.VillagerProfession;
+
+import java.util.Random;
 
 public class DumbItem extends Item {
     public DumbItem(Settings settings){
@@ -24,10 +27,13 @@ public class DumbItem extends Item {
 
                 if (!villager.getVillagerData().getProfession().equals(VillagerProfession.NITWIT)) {
                     villager.setVillagerData(villager.getVillagerData().withProfession(VillagerProfession.NITWIT));
+                    if (new Random().nextBoolean()){
+                        ext.getViewpoint().setIdeology(Ideology.COMMUNIST);
+                    }else{
+                        ext.getViewpoint().setIdeology(Ideology.REACTIONARY);
+                    }
                     if (!user.isCreative()){stack.decrement(1);}
                 }
-
-                if (!user.isCreative()){stack.decrement(1);}
 
                 return ActionResult.SUCCESS;
             }else{

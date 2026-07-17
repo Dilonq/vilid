@@ -23,7 +23,9 @@ public class ModItemGroups {
                         entries.add(ModItems.BADITEM);
                         entries.add(ModItems.DUMBITEM);
                         entries.add(ModItems.EDUCATORITEM);
+                        entries.add(ModItems.CHANGENATIONITEM);
                         entries.add(ModBlocks.DESK);
+                        entries.add(ModBlocks.TRIBUTE_CHEST);
                     }).build());
 
 

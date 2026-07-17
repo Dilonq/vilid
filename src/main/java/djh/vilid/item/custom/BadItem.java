@@ -20,7 +20,7 @@ public class BadItem extends Item {
             if (entity instanceof VillagerEntity){
                 VillagerExt ext = (VillagerExt) entity;
 
-                ext.getIdeology().bringSadness(30);
+                ext.getViewpoint().deltaHappy(-30);
 
                 if (!user.isCreative()){stack.decrement(1);}
 

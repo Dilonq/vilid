@@ -8,8 +8,14 @@
   "item.vilid.dumbifyer": "Dumbifyer",
   "item.vilid.educator": "Educator",
   "item.vilid.poller": "Polling Sheet",
+  "item.vilid.changenationitem": "Change-Nation-Izer (/rename)",
 
   "block.vilid.desk": "Desk",
+  "block.vilid.tribute_chest": "Tribute Chest",
+  "block.vilid.ballot_box": "Ballot Box",
 
-  "entity.minecraft.villager.teacher": "Teacher"
+  "container.vilid.tribute_chest": "Tribute Chest",
+
+  "entity.minecraft.villager.capitalist": "Capitalist",
+  "entity.minecraft.villager.worker": "Proletariat"
 }

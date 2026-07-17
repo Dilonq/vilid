@@ -21,6 +21,8 @@ public class RightItem extends Item {
                 VillagerExt villager = (VillagerExt) entity;
 //                villager.getViewpoint().attemptInfluence(Direction.RIGHT);
 
+                villager.getViewpoint().setIdeology(villager.getViewpoint().getIdeology().moveRight());
+
                 if (!user.isCreative()){stack.decrement(1);}
 
                 return ActionResult.SUCCESS;

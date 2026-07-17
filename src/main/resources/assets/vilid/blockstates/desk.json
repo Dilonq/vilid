@@ -1,7 +1,7 @@
 {
   "variants": {
     "": {
-      "model": "vilid:desk"
+      "model": "vilid:block/desk"
     }
   }
 }
