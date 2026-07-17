@@ -6,6 +6,7 @@ import net.fabricmc.fabric.api.object.builder.v1.trade.TradeOfferHelper;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.village.TradeOffer;
+import net.minecraft.village.TradedItem;
 import net.minecraft.village.VillagerProfession;
 
 public class ModCustomTrades {
@@ -116,13 +117,16 @@ public class ModCustomTrades {
 //                });
     }
 
-    private static void addTrade(VillagerProfession profession, int level, ItemStack price, ItemStack product, int maxUses, int merchantExperience, float priceMultiplier){
+    private static void addTrade(VillagerProfession profession, int level, ItemStack price, ItemStack product, int maxUses, int merchantExperience, float priceMultiplier) {
         TradeOfferHelper.registerVillagerOffers(profession, level,
                 factories -> {
                     factories.add(((entity, random) -> new TradeOffer(
-                            price,
+                            // Extract the item and count into the new 1.21 TradedItem format
+                            new TradedItem(price.getItem(), price.getCount()),
                             product,
-                            maxUses,merchantExperience,priceMultiplier
+                            maxUses,
+                            merchantExperience,
+                            priceMultiplier
                     )));
                 });
     }

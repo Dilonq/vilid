@@ -56,8 +56,8 @@ public abstract class VillagerEntityMixin implements VillagerExt{
 	@Shadow public abstract VillagerData getVillagerData();
 
 	//influence ideology based on new profession
-	@Inject(method = "setVillagerData", at = @At("HEAD"))
-	private void beforeVillagerDataChanged(VillagerData data, CallbackInfo ci) {
+//	@Inject(method = "setVillagerData", at = @At("HEAD"))
+//	private void beforeVillagerDataChanged(VillagerData data, CallbackInfo ci) {
 //		VillagerEntity villager = (VillagerEntity) (Object) this;
 //		VillagerExt ext = (VillagerExt) villager;
 //		VillagerData oldData = villager.getVillagerData();
@@ -68,92 +68,74 @@ public abstract class VillagerEntityMixin implements VillagerExt{
 //			//attempt to influence villager's politics by their new job's leanings
 ////			ext.getViewpoint().attemptInfluence(Ideology.jobWeights.get(data.getProfession()));
 //		}
-	}
+//	}
 
 
 
-	//allow right click with propaganda items
 	@Inject(method = "interactMob", at = @At("HEAD"), cancellable = true)
-	private void cancelTradeIfInfluencing(PlayerEntity player, Hand hand, CallbackInfoReturnable<ActionResult> cir) {
-		ItemStack stack = player.getStackInHand(hand);
-		VillagerEntity villager = (VillagerEntity) (Object) this;
-
-		if (stack.getItem() instanceof ChangeNationItem || stack.getItem() instanceof BadItem || stack.getItem() instanceof EducatorItem || stack.getItem() instanceof DumbItem || stack.getItem() instanceof GoodItem || stack.getItem() instanceof LeftItem || stack.getItem() instanceof RightItem) {
-			// Cancel default trade GUI
-			stack.useOnEntity(player,villager,hand);
-			cir.setReturnValue(ActionResult.SUCCESS);
-		}
-	}
-
-	//allow right click with polling item
-	@Inject(method = "interactMob", at = @At("HEAD"), cancellable = true)
-	private void cancelTradeIfPolling(PlayerEntity player, Hand hand, CallbackInfoReturnable<ActionResult> cir) {
-		ItemStack stack = player.getStackInHand(hand);
-		VillagerEntity villager = (VillagerEntity) (Object) this;
-
-		if (stack.getItem() instanceof PollerItem) {
-			// Cancel default trade GUI
-			stack.useOnEntity(player,villager,hand);
-			cir.setReturnValue(ActionResult.SUCCESS);
-		}
-	}
-
-	//low happiness means no trades
-	//low happiness means no trades
-	@Inject(method = "interactMob", at = @At("HEAD"), cancellable = true)
-	private void cancelTradeIfRadical(PlayerEntity player, Hand hand, CallbackInfoReturnable<ActionResult> cir) {
+	private void onInteractMob(PlayerEntity player, Hand hand, CallbackInfoReturnable<ActionResult> cir) {
 		VillagerEntity villager = (VillagerEntity) (Object) this;
 		VillagerExt ext = (VillagerExt) villager;
+		ItemStack stack = player.getStackInHand(hand);
 
-		if (!player.getWorld().isClient()) {
+		// 1. Custom Items Take Priority (Propaganda & Polling)
+		if (stack.getItem() instanceof ChangeNationItem || stack.getItem() instanceof BadItem ||
+				stack.getItem() instanceof EducatorItem || stack.getItem() instanceof DumbItem ||
+				stack.getItem() instanceof GoodItem || stack.getItem() instanceof LeftItem ||
+				stack.getItem() instanceof RightItem || stack.getItem() instanceof PollerItem) {
+
+			// Execute the item's custom logic and cancel the default villager GUI
+			stack.useOnEntity(player, villager, hand);
+			cir.setReturnValue(ActionResult.SUCCESS); // 1.21 Fix: Use the Enum constant directly
+			return;
+		}
+
+		// 2. Radical/Unhappy Villagers Refuse to Trade
+		if (!villager.getWorld().isClient()) {
 			if (ext.getViewpoint().getHappy() <= 20) {
-				sayNo();
-				player.sendMessage(Text.literal(getLegalName() + " is too unhappy to trade!"));
+				sayNo(); // Assuming you have a @Shadow for this
+				player.sendMessage(Text.literal(ext.getLegalName() + " is too unhappy to trade!"));
 
-				// Set the return value to cleanly exit the interaction without opening the UI
-				cir.setReturnValue(ActionResult.success(villager.getWorld().isClient()));
+				// 1.21 Fix: Removed .success(boolean), just use the SUCCESS constant
+				cir.setReturnValue(ActionResult.SUCCESS);
+				return;
 			}
 		}
-	}
 
-	//capitalist trades depend on # of nearby workers
-	@Inject(method = "interactMob", at = @At("HEAD"))
-	private void onPlayerInteract(PlayerEntity player, Hand hand, CallbackInfoReturnable<ActionResult> cir) {
-		VillagerEntity villager = (VillagerEntity) (Object) this;
-
+		// 3. Update Capitalist Trade Levels BEFORE the GUI Opens
 		if (villager.getVillagerData().getProfession() == ModProfessions.CAPITALIST) {
 			if (!villager.getWorld().isClient()) {
-				Box searchArea = villager.getBoundingBox().expand(40.0);
+				Box workerSearch = villager.getBoundingBox().expand(40.0);
 				List<VillagerEntity> nearbyWorkers = villager.getWorld().getEntitiesByClass(
 						VillagerEntity.class,
-						searchArea,
+						workerSearch,
 						v -> v.getVillagerData().getProfession() == ModProfessions.WORKER
 				);
 				int workerCount = nearbyWorkers.size();
 
-				searchArea = villager.getBoundingBox().expand(20.0);
+				Box capitalistSearch = villager.getBoundingBox().expand(20.0);
 				List<VillagerEntity> nearbyCapitalists = villager.getWorld().getEntitiesByClass(
 						VillagerEntity.class,
-						searchArea,
-						// Add 'v != villager' so they don't count themselves as a rival!
+						capitalistSearch,
 						v -> v != villager && v.getVillagerData().getProfession() == ModProfessions.CAPITALIST
 				);
 				int capitalistCount = nearbyCapitalists.size();
-				if (capitalistCount>=1){
-					//refuse to trade if there are other nearby capitalists
-					villager.setVillagerData(getVillagerData().withLevel(1));
-				}else {
-					//change trade quality of capitalist based on nearby workers
+
+				if (capitalistCount >= 1) {
+					// Refuse to trade (reset to level 1) if there are other nearby capitalists
+					villager.setVillagerData(villager.getVillagerData().withLevel(1));
+				} else {
+					// Change trade quality of capitalist based on nearby workers
 					if (workerCount < 2) {
-						villager.setVillagerData(getVillagerData().withLevel(1));
+						villager.setVillagerData(villager.getVillagerData().withLevel(1));
 					} else if (workerCount < 6) {
-						villager.setVillagerData(getVillagerData().withLevel(2));
+						villager.setVillagerData(villager.getVillagerData().withLevel(2));
 					} else if (workerCount < 11) {
-						villager.setVillagerData(getVillagerData().withLevel(3));
+						villager.setVillagerData(villager.getVillagerData().withLevel(3));
 					} else if (workerCount < 16) {
-						villager.setVillagerData(getVillagerData().withLevel(4));
+						villager.setVillagerData(villager.getVillagerData().withLevel(4));
 					} else if (workerCount < 21) {
-						villager.setVillagerData(getVillagerData().withLevel(5));
+						villager.setVillagerData(villager.getVillagerData().withLevel(5));
 					}
 				}
 			}
@@ -457,7 +439,7 @@ public abstract class VillagerEntityMixin implements VillagerExt{
 			return false;
 		}
 
-		BlockPos bedPos = homeMemory.get().getPos();
+		BlockPos bedPos = homeMemory.get().pos();
 
 		// check that the block at bedPos is still a bed
 		if (!self.getWorld().getBlockState(bedPos).isIn(BlockTags.BEDS)) {

@@ -1,68 +1,78 @@
-package djh.vilid.block.entity.custom;
-
-import net.minecraft.block.BlockState;
-import net.minecraft.block.entity.BlockEntityType;
-import net.minecraft.block.entity.LootableContainerBlockEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.Inventories;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.screen.GenericContainerScreenHandler;
-import net.minecraft.screen.ScreenHandler;
-import net.minecraft.text.Text;
-import net.minecraft.util.collection.DefaultedList;
-import net.minecraft.util.math.BlockPos;
-
-public class TributeChestBlockEntity extends LootableContainerBlockEntity {
-    // 27 slots matches a standard normal single chest / barrel inventory size
-    private DefaultedList<ItemStack> inventory = DefaultedList.ofSize(27, ItemStack.EMPTY);
-
-    public TributeChestBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
-        super(type, pos, state);
-    }
-
-    @Override
-    protected Text getContainerName() {
-        return Text.translatable("container.vilid.tribute_chest");
-    }
-
-    @Override
-    protected DefaultedList<ItemStack> getInvStackList() {
-        return this.inventory;
-    }
-
-    @Override
-    protected void setInvStackList(DefaultedList<ItemStack> list) {
-        this.inventory = list;
-    }
-
-    @Override
-    protected ScreenHandler createScreenHandler(int syncId, PlayerInventory playerInventory) {
-        // Leverages vanilla's 3-row chest GUI container directly
-        return GenericContainerScreenHandler.createGeneric9x3(syncId, playerInventory, this);
-    }
-
-    @Override
-    public int size() {
-        return 27;
-    }
-
-    // Save inventory data to NBT when chunk unloads/saves
-    @Override
-    public void writeNbt(NbtCompound nbt) {
-        super.writeNbt(nbt);
-        if (!this.serializeLootTable(nbt)) {
-            Inventories.writeNbt(nbt, this.inventory);
-        }
-    }
-
-    // Read inventory back from NBT when chunk loads
-    @Override
-    public void readNbt(NbtCompound nbt) {
-        super.readNbt(nbt);
-        this.inventory = DefaultedList.ofSize(this.size(), ItemStack.EMPTY);
-        if (!this.deserializeLootTable(nbt)) {
-            Inventories.readNbt(nbt, this.inventory);
-        }
-    }
-}
+//package djh.vilid.block.entity.custom;
+//
+//import net.minecraft.block.BlockState;
+//import net.minecraft.block.entity.BlockEntityType;
+//import net.minecraft.block.entity.LootableContainerBlockEntity;
+//import net.minecraft.entity.player.PlayerInventory;
+//import net.minecraft.inventory.Inventories;
+//import net.minecraft.item.ItemStack;
+//import net.minecraft.nbt.NbtCompound;
+//import net.minecraft.screen.GenericContainerScreenHandler;
+//import net.minecraft.screen.ScreenHandler;
+//import net.minecraft.text.Text;
+//import net.minecraft.util.collection.DefaultedList;
+//import net.minecraft.util.math.BlockPos;
+//
+//public class TributeChestBlockEntity extends LootableContainerBlockEntity {
+//    // 27 slots matches a standard normal single chest / barrel inventory size
+//    private DefaultedList<ItemStack> inventory = DefaultedList.ofSize(27, ItemStack.EMPTY);
+//
+//    public TributeChestBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
+//        super(type, pos, state);
+//    }
+//
+//    @Override
+//    protected Text getContainerName() {
+//        return Text.translatable("container.vilid.tribute_chest");
+//    }
+//
+//    @Override
+//    protected DefaultedList<ItemStack> getHeldStacks() {
+//        return null;
+//    }
+//
+//    @Override
+//    protected void setHeldStacks(DefaultedList<ItemStack> inventory) {
+//
+//    }
+//
+//    @Override
+//    protected DefaultedList<ItemStack> getInvStackList() {
+//        return this.inventory;
+//    }
+//
+//    @Override
+//    protected void setInvStackList(DefaultedList<ItemStack> list) {
+//        this.inventory = list;
+//    }
+//
+//    @Override
+//    protected ScreenHandler createScreenHandler(int syncId, PlayerInventory playerInventory) {
+//        // Leverages vanilla's 3-row chest GUI container directly
+//        return GenericContainerScreenHandler.createGeneric9x3(syncId, playerInventory, this);
+//    }
+//
+//    @Override
+//    public int size() {
+//        return 27;
+//    }
+//
+//    // Save inventory data to NBT when chunk unloads/saves
+//    @Override
+//    public void writeNbt(NbtCompound nbt) {
+//        super.writeNbt(nbt);
+//        if (!this.serializeLootTable(nbt)) {
+//            Inventories.writeNbt(nbt, this.inventory);
+//        }
+//    }
+//
+//    // Read inventory back from NBT when chunk loads
+//    @Override
+//    public void readNbt(NbtCompound nbt) {
+//        super.readNbt(nbt);
+//        this.inventory = DefaultedList.ofSize(this.size(), ItemStack.EMPTY);
+//        if (!this.deserializeLootTable(nbt)) {
+//            Inventories.readNbt(nbt, this.inventory);
+//        }
+//    }
+//}

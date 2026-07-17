@@ -38,19 +38,25 @@ public class PollerScreenHandler extends ScreenHandler {
     public PollerScreenHandler(int syncId, PlayerInventory inv, PollerData data) {
         super(TYPE, syncId);
 
-        this.villagerId = buf.readVarInt();
-        this.villagerHappiness = buf.readVarInt();
-        this.ideology = buf.readEnumConstant(Ideology.class);
+        // 1. Grab primitives directly
+        this.villagerId = data.villagerId();
+        this.villagerHappiness = data.happiness();
 
-        int lineCount = buf.readVarInt();
-        for (int i = 0; i < lineCount; i++) {
-            lines.add(Text.literal(buf.readString()));
+        // 2. Convert the string back into your Ideology enum
+        this.ideology = Ideology.valueOf(data.ideology());
+
+        // 3. Convert the list of Strings into a list of Text elements
+        for (String line : data.lines()) {
+            this.lines.add(Text.literal(line));
         }
 
-        int moodCount = buf.readVarInt();
-        for (int i = 0; i < moodCount; i++) {
-            moodLines.add(Text.literal(buf.readString()));
+        for (String moodLine : data.moodLines()) {
+            this.moodLines.add(Text.literal(moodLine));
         }
+    }
+
+    public static void register() {
+        //dummy
     }
 
     @Override

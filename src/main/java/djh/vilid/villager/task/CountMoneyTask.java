@@ -24,12 +24,16 @@ public class CountMoneyTask extends MultiTickTask<VillagerEntity> {
     @Override
     protected boolean shouldRun(ServerWorld world, VillagerEntity capitalist) {
         Optional<GlobalPos> jobSite = capitalist.getBrain().getOptionalRegisteredMemory(MemoryModuleType.JOB_SITE);
-        if (jobSite.isEmpty() || jobSite.get().getDimension() != world.getRegistryKey()) {
+
+        // 1.21 Fix: .getDimension() is now just .dimension()
+        if (jobSite.isEmpty() || jobSite.get().dimension() != world.getRegistryKey()) {
             return false;
         }
 
+        // 1.21 Fix: .getPos() is now just .pos()
+        BlockPos pos = jobSite.get().pos();
+
         // Let vanilla AI handle the walking. Only take over once they are within 3 blocks.
-        BlockPos pos = jobSite.get().getPos();
         return pos.isWithinDistance(capitalist.getPos(), 3.0);
     }
 
@@ -37,7 +41,7 @@ public class CountMoneyTask extends MultiTickTask<VillagerEntity> {
     protected void run(ServerWorld world, VillagerEntity capitalist, long time) {
         // Task started: lock eyes on the emerald block
         Optional<GlobalPos> jobSite = capitalist.getBrain().getOptionalRegisteredMemory(MemoryModuleType.JOB_SITE);
-        jobSite.ifPresent(globalPos -> capitalist.getBrain().remember(MemoryModuleType.LOOK_TARGET, new BlockPosLookTarget(globalPos.getPos())));
+        jobSite.ifPresent(globalPos -> capitalist.getBrain().remember(MemoryModuleType.LOOK_TARGET, new BlockPosLookTarget(globalPos.pos())));
     }
 
     @Override
@@ -46,13 +50,13 @@ public class CountMoneyTask extends MultiTickTask<VillagerEntity> {
         Optional<GlobalPos> jobSite = capitalist.getBrain().getOptionalRegisteredMemory(MemoryModuleType.JOB_SITE);
         if (jobSite.isEmpty()) return false;
 
-        return jobSite.get().getPos().isWithinDistance(capitalist.getPos(), 3.0);
+        return jobSite.get().pos().isWithinDistance(capitalist.getPos(), 3.0);
     }
 
     @Override
     protected void keepRunning(ServerWorld world, VillagerEntity capitalist, long time) {
         // Continuously force them to look at it every tick, overriding their natural desire to look around
         Optional<GlobalPos> jobSite = capitalist.getBrain().getOptionalRegisteredMemory(MemoryModuleType.JOB_SITE);
-        jobSite.ifPresent(globalPos -> capitalist.getBrain().remember(MemoryModuleType.LOOK_TARGET, new BlockPosLookTarget(globalPos.getPos())));
+        jobSite.ifPresent(globalPos -> capitalist.getBrain().remember(MemoryModuleType.LOOK_TARGET, new BlockPosLookTarget(globalPos.pos())));
     }
 }

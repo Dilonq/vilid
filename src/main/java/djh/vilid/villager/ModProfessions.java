@@ -23,7 +23,7 @@ public class ModProfessions {
     //capitalist employs workers. the more employees, the better trades the capitalist has and the faster they refresh
     public static final VillagerProfession CAPITALIST = Registry.register(
             Registries.VILLAGER_PROFESSION,
-            new Identifier(Vilid.MOD_ID, "capitalist"),
+            Identifier.of(Vilid.MOD_ID, "capitalist"),
             new VillagerProfession(
                     "capitalist",
                     entry -> entry.matchesKey(CAPITALIST_POI_KEY), // heldWorkstation
@@ -38,7 +38,7 @@ public class ModProfessions {
     //their own means of production
     public static final VillagerProfession WORKER = Registry.register(
             Registries.VILLAGER_PROFESSION,
-            new Identifier(Vilid.MOD_ID, "worker"),
+            Identifier.of(Vilid.MOD_ID, "worker"),
             new VillagerProfession(
                     "worker",
                     poiType -> false,          // heldWorkstation — never true, no job site claimed
@@ -50,18 +50,18 @@ public class ModProfessions {
     );
 
     private static VillagerProfession registerProfession(String name, RegistryKey<PointOfInterestType> type){
-        return Registry.register(Registries.VILLAGER_PROFESSION, new Identifier(Vilid.MOD_ID,name),
+        return Registry.register(Registries.VILLAGER_PROFESSION, Identifier.of(Vilid.MOD_ID,name),
                 new VillagerProfession(name, entry -> entry.matchesKey(type), entry -> entry.matchesKey(type),
                         ImmutableSet.of(), ImmutableSet.of(), SoundEvents.ENTITY_VILLAGER_WORK_LIBRARIAN));
     }
 
 
     private static PointOfInterestType registerPoi(String name, Block block){
-        return PointOfInterestHelper.register(new Identifier(Vilid.MOD_ID,name),1,1,block);
+        return PointOfInterestHelper.register(Identifier.of(Vilid.MOD_ID,name),1,1,block);
     }
 
     private static RegistryKey<PointOfInterestType> poiKey(String name){
-        return RegistryKey.of(RegistryKeys.POINT_OF_INTEREST_TYPE, new Identifier(Vilid.MOD_ID,name));
+        return RegistryKey.of(RegistryKeys.POINT_OF_INTEREST_TYPE, Identifier.of(Vilid.MOD_ID,name));
     }
 
     public static void registerVillagers(){

@@ -8,12 +8,18 @@ import net.fabricmc.loader.api.FabricLoader;
 
 public class ModGUI {
     public static void init() {
-        // Common registration
+        // 1. Common registration (Loads for both Singleplayer and Multiplayer)
         PollerScreenHandler.register();
 
-        // Client-only registration
+        // 2. Client-only registration
         if (FabricLoader.getInstance().getEnvironmentType() == EnvType.CLIENT) {
-            HandledScreens.register(PollerScreenHandler.TYPE, PollerScreen::new);
+            registerClientScreens();
         }
+    }
+
+    // By hiding the visual Screen here, the Server never attempts to load it,
+    // which completely prevents the NoClassDefFoundError!
+    private static void registerClientScreens() {
+        HandledScreens.register(PollerScreenHandler.TYPE, PollerScreen::new);
     }
 }

@@ -7,6 +7,10 @@ import djh.vilid.ideology.politics.Ideology;
 import djh.vilid.ideology.politics.Party;
 import djh.vilid.nation.NationData;
 import djh.vilid.villager.VillagerExt;
+import it.unimi.dsi.fastutil.ints.IntList;
+import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.FireworkExplosionComponent;
+import net.minecraft.component.type.FireworksComponent;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.passive.VillagerEntity;
 import net.minecraft.entity.projectile.FireworkRocketEntity;
@@ -398,23 +402,25 @@ public class ModCommands {
 
     private static ItemStack createFireworkForIdeology(Ideology ideology) {
         ItemStack stack = new ItemStack(Items.FIREWORK_ROCKET);
-        NbtCompound fireworks = new NbtCompound();
-        NbtList explosions = new NbtList();
-        NbtCompound explosion = new NbtCompound();
 
-        explosion.putByte("Type", (byte) 1);
-        explosion.putIntArray("Colors", new int[]{ideology.color});
-        explosion.putBoolean("Flicker", true);
-        explosion.putBoolean("Trail", true);
+        // 1. Define the explosion effect (Type 1 = LARGE_BALL)
+        FireworkExplosionComponent explosion = new FireworkExplosionComponent(
+                FireworkExplosionComponent.Type.LARGE_BALL,
+                IntList.of(ideology.color), // Initial colors
+                IntList.of(),               // Fade colors (empty array)
+                true,                       // Trail
+                true                        // Flicker
+        );
 
-        explosions.add(explosion);
+        // 2. Package the explosion into the main fireworks component
+        FireworksComponent fireworksComponent = new FireworksComponent(
+                1,                  // Flight duration
+                List.of(explosion)  // List of explosions attached to this rocket
+        );
 
-        NbtCompound fireworksTag = new NbtCompound();
-        fireworksTag.putByte("Flight", (byte) 1);
-        fireworksTag.put("Explosions", explosions);
+        // 3. Apply the component directly to the ItemStack
+        stack.set(DataComponentTypes.FIREWORKS, fireworksComponent);
 
-        fireworks.put("Fireworks", fireworksTag);
-        stack.setNbt(fireworks);
         return stack;
     }
 
@@ -462,6 +468,13 @@ public class ModCommands {
 
     private static int renameItemInHand(ServerCommandSource source, String newName) {
         ServerPlayerEntity player = source.getPlayer();
+
+        // Check if the player is null (in case the command is run from a command block or console)
+        if (player == null) {
+            source.sendError(Text.literal("Only players can run this command."));
+            return 0;
+        }
+
         ItemStack stack = player.getMainHandStack();
 
         if (stack.isEmpty()) {
@@ -469,7 +482,9 @@ public class ModCommands {
             return 0;
         }
 
-        stack.setCustomName(Text.literal(newName));
+        // Apply the custom name component using the 1.21 system
+        stack.set(DataComponentTypes.CUSTOM_NAME, Text.literal(newName));
+
         source.sendFeedback(() -> Text.literal("Renamed item in hand to: " + newName), true);
         return 1;
     }

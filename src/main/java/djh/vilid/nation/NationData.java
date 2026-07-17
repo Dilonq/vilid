@@ -6,6 +6,7 @@ import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtList;
 import net.minecraft.nbt.NbtString;
+import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.world.PersistentState;
 
@@ -21,15 +22,18 @@ public class NationData extends PersistentState {
     private final Map<String, String> rulingParty = new HashMap<>();
     public final Map<UUID, VillagerSnapshot> villagerStates = new HashMap<>();
 
+    private static final PersistentState.Type<NationData> TYPE = new PersistentState.Type<>(
+            NationData::new,
+            NationData::fromNbt,
+            null
+    );
+
     public static NationData get(ServerWorld world) {
-        return world.getPersistentStateManager().getOrCreate(
-                NationData::fromNbt,
-                NationData::new,
-                "nations"
-        );
+        return world.getPersistentStateManager().getOrCreate(TYPE, "nations");
     }
 
-    public static NationData fromNbt(NbtCompound nbt) {
+    // 1.21 Fix: Added RegistryWrapper.WrapperLookup
+    public static NationData fromNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup registryLookup) {
         NationData data = new NationData();
 
         NbtList nationsList = nbt.getList("nations", NbtElement.STRING_TYPE);
@@ -76,13 +80,12 @@ public class NationData extends PersistentState {
             }
         }
 
-
         return data;
     }
 
-
+    // 1.21 Fix: Added RegistryWrapper.WrapperLookup
     @Override
-    public NbtCompound writeNbt(NbtCompound nbt) {
+    public NbtCompound writeNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup registryLookup) {
         NbtList nationsList = new NbtList();
         for (String nation : nations) {
             nationsList.add(NbtString.of(nation));
@@ -129,7 +132,6 @@ public class NationData extends PersistentState {
         }
         nbt.put("villagerStates", villagerList);
 
-
         return nbt;
     }
 
@@ -156,9 +158,7 @@ public class NationData extends PersistentState {
         }
     }
 
-
     public void updateVillager(UUID uuid, String nation, int happiness, Ideology ideology) {
-        nation = nation;
         villagerStates.put(uuid, new VillagerSnapshot(nation, happiness, ideology));
         markDirty();
     }
@@ -170,14 +170,14 @@ public class NationData extends PersistentState {
 
     public double getAverageHappiness(String nation) {
         return villagerStates.values().stream()
-                .filter(v -> v.nation.equalsIgnoreCase(nation))
+                .filter(v -> v.nation().equalsIgnoreCase(nation)) // 1.21 Fix: Record getter
                 .mapToInt(VillagerSnapshot::happiness)
                 .average().orElse(0);
     }
 
     public Map<Ideology, Long> getIdeologyCounts(String nation) {
         return villagerStates.values().stream()
-                .filter(v -> v.nation.equalsIgnoreCase(nation))
+                .filter(v -> v.nation().equalsIgnoreCase(nation)) // 1.21 Fix: Record getter
                 .collect(Collectors.groupingBy(VillagerSnapshot::ideology, Collectors.counting()));
     }
 

@@ -13,7 +13,7 @@ import net.minecraft.util.Identifier;
 
 public class ModItemGroups {
     public static final ItemGroup COM_GROUP = Registry.register(Registries.ITEM_GROUP,
-            new Identifier(Vilid.MOD_ID, "com"),
+            Identifier.of(Vilid.MOD_ID, "com"),
             FabricItemGroup.builder().displayName(Text.translatable("itemgroup.vilid.vilid"))
                     .icon(() -> new ItemStack(ModItems.POLLER)).entries((displayContext, entries) -> {
                         entries.add(ModItems.POLLER);
@@ -24,8 +24,9 @@ public class ModItemGroups {
                         entries.add(ModItems.DUMBITEM);
                         entries.add(ModItems.EDUCATORITEM);
                         entries.add(ModItems.CHANGENATIONITEM);
-                        entries.add(ModBlocks.DESK);
-                        entries.add(ModBlocks.TRIBUTE_CHEST);
+                        entries.add(Items.EMERALD_BLOCK);
+//                        entries.add(ModBlocks.DESK);
+//                        entries.add(ModBlocks.TRIBUTE_CHEST);
                     }).build());
 
 
