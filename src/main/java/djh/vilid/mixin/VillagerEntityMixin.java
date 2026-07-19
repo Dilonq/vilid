@@ -384,6 +384,11 @@ public abstract class VillagerEntityMixin implements VillagerExt{
 	}
 
 	public Viewpoint getViewpoint() {
+		if (viewpoint == null){
+			this.viewpoint = new Viewpoint();
+			this.viewpoint.generateViewpoint(VillagerProfession.NONE);
+			return this.viewpoint;
+		}
 		return viewpoint;
 	}
 	public void setViewpoint(Viewpoint v) {
