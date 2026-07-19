@@ -22,12 +22,38 @@ import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.Optional;
 
 @Mixin(SpawnEggItem.class)
 public abstract class VillagerEggMixin {
+
+
+//    @Inject(method = "tick", at = @At("HEAD"))
+//    private void onTickInit(CallbackInfo ci) {
+//        VillagerEntity villager = (VillagerEntity) (Object) this;
+//
+//        // Only run on the server, and only run ONCE per session per villager
+//        if (!villager.getWorld().isClient() && !this.hasInitializedVilidData) {
+//            VillagerExt ext = (VillagerExt) villager;
+//
+//            // 1. If they don't have a legal name yet (e.g. a newborn baby), generate it
+//            if (ext.getLegalName() == null) {
+//                ext.genBaseNBT(villager.getVillagerData().getProfession());
+//            }
+//
+//            // 2. Sync the vanilla CustomName to our generated legal name
+//            // Checking !hasCustomName() ensures we don't accidentally overwrite vanilla Name Tags if a player used one
+//            if (ext.getLegalName() != null && !villager.hasCustomName()) {
+//                villager.setCustomName(Text.literal(ext.getLegalName()));
+//            }
+//
+//            // Mark as initialized so this block never runs again for this entity's loaded session
+//            this.hasInitializedVilidData = true;
+//        }
+//    }
 
 //    @Inject(method = "spawnBaby", at = @At("HEAD"), cancellable = true)
 //    private void disableBabySpawn(PlayerEntity user, MobEntity entity, EntityType<? extends MobEntity> entityType, ServerWorld world, Vec3d pos, ItemStack stack, CallbackInfoReturnable<Optional<MobEntity>> cir) {

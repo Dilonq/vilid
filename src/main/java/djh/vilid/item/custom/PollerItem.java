@@ -70,11 +70,13 @@ public class PollerItem extends Item {
                 if (villager.getVillagerData().getProfession().equals(VillagerProfession.NONE)) moodLines.add("(-) I am unemployed");
                 if (!ext.hasBed()) moodLines.add("(-) I am homeless");
                 if (ext.getNearbyVillagerCount(8) > 6) moodLines.add("(-) I hate this crowd");
+                if (!villager.getVillagerData().getProfession().equals(VillagerProfession.NONE) && !villager.getVillagerData().getProfession().equals(VillagerProfession.NITWIT) && !villager.getVillagerData().getProfession().equals(ModProfessions.WORKER) && villager.getVillagerData().getLevel() >= 4)
+                    moodLines.add("(+) Work is going well");
                 if (job.equals("nitwit")) moodLines.add("(+) I am a nitwit");
                 if (ext.hasMetToday()) moodLines.add("(+) I have been social today");
                 if (ext.isIronGolemNearby(32)) moodLines.add("(+) I feel protected by the golem");
-                if (!villager.getVillagerData().getProfession().equals(VillagerProfession.NONE) && !villager.getVillagerData().getProfession().equals(VillagerProfession.NITWIT) && !villager.getVillagerData().getProfession().equals(ModProfessions.WORKER))
-                    moodLines.add("(+) I am self-employed");
+                if (villager.isBaby())
+                    moodLines.add("(+) I am a little baby");
                 if (!villager.getVillagerData().getProfession().equals(VillagerProfession.NONE) && !villager.getVillagerData().getProfession().equals(VillagerProfession.NITWIT) && !villager.getVillagerData().getProfession().equals(ModProfessions.WORKER) && villager.getVillagerData().getLevel() >= 4)
                     moodLines.add("(+) Work is going well");
 

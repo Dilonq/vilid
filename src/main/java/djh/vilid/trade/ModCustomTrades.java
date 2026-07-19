@@ -23,7 +23,6 @@ public class ModCustomTrades {
         addTrade(ModProfessions.CAPITALIST, 2, new ItemStack(Items.EMERALD, 4), new ItemStack(Items.GOLDEN_CARROT, 3), 3, 0, 1);
 
         addTrade(ModProfessions.CAPITALIST, 3, new ItemStack(Items.EMERALD, 4), new ItemStack(Items.GOLD_INGOT, 1), 8, 0, 1);
-        addTrade(ModProfessions.CAPITALIST, 3, new ItemStack(Items.EMERALD, 10), new ItemStack(Items.MINECART, 1), 3, 0, 1);
         addTrade(ModProfessions.CAPITALIST, 3, new ItemStack(Items.EMERALD, 20), new ItemStack(Items.IRON_BLOCK, 1), 1, 0, 1);
         addTrade(ModProfessions.CAPITALIST, 3, new ItemStack(Items.EMERALD, 4), new ItemStack(Items.ENDER_PEARL, 1), 2, 0, 1);
         addTrade(ModProfessions.CAPITALIST, 3, new ItemStack(Items.EMERALD, 14), new ItemStack(Items.IRON_CHESTPLATE, 1), 1, 0, 1);
@@ -43,7 +42,6 @@ public class ModCustomTrades {
         addTrade(ModProfessions.CAPITALIST, 5, new ItemStack(Items.EMERALD, 48), new ItemStack(Items.TRIDENT, 1), 1, 0, 1);
         addTrade(ModProfessions.CAPITALIST, 5, new ItemStack(Items.EMERALD, 64), new ItemStack(Items.DIAMOND_BLOCK, 1), 1, 0, 1);
         addTrade(ModProfessions.CAPITALIST, 5, new ItemStack(Items.EMERALD, 64), new ItemStack(Items.TOTEM_OF_UNDYING, 1), 1, 0, 1);
-        addTrade(ModProfessions.CAPITALIST, 5, new ItemStack(Items.EMERALD, 20), new ItemStack(Items.SPONGE, 1), 3, 0, 1);
         addTrade(ModProfessions.CAPITALIST, 5, new ItemStack(Items.EMERALD, 3), new ItemStack(Items.EXPERIENCE_BOTTLE, 8), 2, 0, 1);
         addTrade(ModProfessions.CAPITALIST, 5, new ItemStack(Items.EMERALD, 20), new ItemStack(Items.DIAMOND_CHESTPLATE, 1), 1, 0, 1);
         addTrade(ModProfessions.CAPITALIST, 5, new ItemStack(Items.EMERALD, 16), new ItemStack(Items.DIAMOND_LEGGINGS, 1), 1, 0, 1);

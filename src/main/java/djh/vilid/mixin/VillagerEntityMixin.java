@@ -9,17 +9,22 @@ import djh.vilid.nation.NationData;
 import djh.vilid.nation.NationUtil;
 import djh.vilid.villager.ModProfessions;
 import djh.vilid.villager.VillagerExt;
+import net.minecraft.block.Blocks;
 import net.minecraft.entity.*;
 import net.minecraft.entity.ai.brain.Activity;
 import net.minecraft.entity.ai.brain.MemoryModuleType;
 import net.minecraft.entity.mob.VindicatorEntity;
 import net.minecraft.entity.passive.IronGolemEntity;
+import net.minecraft.entity.passive.PassiveEntity;
 import net.minecraft.entity.passive.VillagerEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.registry.Registries;
+import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.registry.tag.BlockTags;
+import net.minecraft.registry.tag.PointOfInterestTypeTags;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
@@ -27,6 +32,7 @@ import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
+import net.minecraft.util.math.GlobalPos;
 import net.minecraft.village.VillagerData;
 import net.minecraft.village.VillagerProfession;
 import net.minecraft.world.LocalDifficulty;
@@ -44,6 +50,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Random;
 import java.util.logging.Logger;
 
@@ -70,6 +77,55 @@ public abstract class VillagerEntityMixin implements VillagerExt{
 //		}
 //	}
 
+	private boolean hasInitializedVilidData = false;
+
+	@Inject(method = "tick", at = @At("HEAD"))
+	private void onTickInit(CallbackInfo ci) {
+		VillagerEntity villager = (VillagerEntity) (Object) this;
+
+		// Only run on the server, and only run ONCE per session per villager
+		if (!villager.getWorld().isClient() && !this.hasInitializedVilidData) {
+			VillagerExt ext = (VillagerExt) villager;
+
+			// 1. If they don't have a legal name yet (e.g. a newborn baby), generate it
+			if (ext.getLegalName() == null) {
+				ext.genBaseNBT(villager.getVillagerData().getProfession());
+			}
+
+			// 2. Sync the vanilla CustomName to our generated legal name
+			if (ext.getLegalName() != null && !villager.hasCustomName()) {
+				villager.setCustomName(Text.literal(ext.getLegalName()));
+			}
+
+			// Mark as initialized so this block never runs again for this entity's loaded session
+			this.hasInitializedVilidData = true;
+		}
+	}
+
+	@Inject(method = "createChild", at = @At("RETURN"))
+	private void onBabyCreated(ServerWorld serverWorld, PassiveEntity passiveEntity, CallbackInfoReturnable<VillagerEntity> cir) {
+		VillagerEntity baby = cir.getReturnValue();
+		if (baby != null) {
+			VillagerExt ext = (VillagerExt) baby;
+
+			// Generate the NBT for the baby (babies default to the NONE profession)
+			ext.genBaseNBT(VillagerProfession.NONE);
+
+			// Crucial: Apply the legalName to the Vanilla CustomName
+			// Otherwise, the game UI will still just say "Villager"
+			baby.setCustomName(Text.literal(ext.getLegalName()));
+		}
+	}
+
+	@Inject(method = "initialize", at = @At("RETURN"))
+	private void onInitialize(ServerWorldAccess world, LocalDifficulty difficulty, SpawnReason spawnReason, @Nullable EntityData entityData, CallbackInfoReturnable<EntityData> cir) {
+		VillagerEntity villager = (VillagerEntity) (Object) this;
+		VillagerExt ext = (VillagerExt) villager;
+
+		// Generate NBT based on whatever profession they spawned with
+		ext.genBaseNBT(villager.getVillagerData().getProfession());
+		villager.setCustomName(Text.literal(ext.getLegalName()));
+	}
 
 
 	@Inject(method = "interactMob", at = @At("HEAD"), cancellable = true)
@@ -107,40 +163,146 @@ public abstract class VillagerEntityMixin implements VillagerExt{
 			if (!villager.getWorld().isClient()) {
 				Box workerSearch = villager.getBoundingBox().expand(40.0);
 				List<VillagerEntity> nearbyWorkers = villager.getWorld().getEntitiesByClass(
-						VillagerEntity.class,
-						workerSearch,
+						VillagerEntity.class, workerSearch,
 						v -> v.getVillagerData().getProfession() == ModProfessions.WORKER
 				);
 				int workerCount = nearbyWorkers.size();
 
 				Box capitalistSearch = villager.getBoundingBox().expand(20.0);
 				List<VillagerEntity> nearbyCapitalists = villager.getWorld().getEntitiesByClass(
-						VillagerEntity.class,
-						capitalistSearch,
+						VillagerEntity.class, capitalistSearch,
 						v -> v != villager && v.getVillagerData().getProfession() == ModProfessions.CAPITALIST
 				);
 				int capitalistCount = nearbyCapitalists.size();
 
-				if (capitalistCount >= 1) {
-					// Refuse to trade (reset to level 1) if there are other nearby capitalists
-					villager.setVillagerData(villager.getVillagerData().withLevel(1));
-				} else {
-					// Change trade quality of capitalist based on nearby workers
-					if (workerCount < 2) {
-						villager.setVillagerData(villager.getVillagerData().withLevel(1));
-					} else if (workerCount < 6) {
-						villager.setVillagerData(villager.getVillagerData().withLevel(2));
-					} else if (workerCount < 11) {
-						villager.setVillagerData(villager.getVillagerData().withLevel(3));
-					} else if (workerCount < 16) {
-						villager.setVillagerData(villager.getVillagerData().withLevel(4));
-					} else if (workerCount < 21) {
-						villager.setVillagerData(villager.getVillagerData().withLevel(5));
+				// Calculate what their level SHOULD be
+				int targetLevel = 1;
+				if (capitalistCount == 0) {
+					if (workerCount >= 21) targetLevel = 5;
+					else if (workerCount >= 16) targetLevel = 4;
+					else if (workerCount >= 11) targetLevel = 3;
+					else if (workerCount >= 6) targetLevel = 2;
+				}
+
+				// If their level changed (up or down), rebuild their trades
+				if (villager.getVillagerData().getLevel() != targetLevel || villager.getOffers().isEmpty()) {
+
+					// Wipe the existing trades
+					villager.getOffers().clear();
+					VillagerData data = villager.getVillagerData();
+
+					// Rebuild trades level by level up to the target level
+					for (int i = 1; i <= targetLevel; i++) {
+						villager.setVillagerData(data.withLevel(i));
+						this.fillRecipes(); // This Vanilla method generates trades for the current level
 					}
 				}
 			}
 		}
 	}
+
+	@Inject(method = "tick", at = @At("TAIL"))
+	private void workerJobSearchTick(CallbackInfo ci) {
+		VillagerEntity villager = (VillagerEntity) (Object) this;
+		if (villager.getWorld().isClient()) return;
+
+		// Check once every 5 seconds
+		if (villager.age % 100 == 0) {
+			VillagerData data = villager.getVillagerData();
+
+			if (data.getProfession() == ModProfessions.WORKER) {
+				ServerWorld serverWorld = (ServerWorld) villager.getWorld();
+
+				// 1. Find an open workstation within 12 blocks
+				Optional<BlockPos> availableJobSiteOpt = serverWorld.getPointOfInterestStorage().getPosition(
+						poiTypeEntry -> poiTypeEntry.isIn(PointOfInterestTypeTags.ACQUIRABLE_JOB_SITE),
+						pos -> true,
+						villager.getBlockPos(),
+						12,
+						PointOfInterestStorage.OccupationStatus.HAS_SPACE
+				);
+
+				if (availableJobSiteOpt.isPresent()) {
+					BlockPos jobPos = availableJobSiteOpt.get();
+
+					// 2. Find out what type of workstation it is (e.g., Composter, Lectern)
+					Optional<RegistryEntry<PointOfInterestType>> poiEntryOpt = serverWorld.getPointOfInterestStorage().getType(jobPos);
+
+					if (poiEntryOpt.isPresent()) {
+						RegistryEntry<PointOfInterestType> poiEntry = poiEntryOpt.get();
+
+						// 3. Search the registry for the Vanilla profession that uses this workstation
+						VillagerProfession newProfession = Registries.VILLAGER_PROFESSION.stream()
+								.filter(prof -> prof.acquirableWorkstation().test(poiEntry))
+								.findFirst()
+								.orElse(VillagerProfession.NONE);
+
+						if (newProfession != VillagerProfession.NONE) {
+							// Instantly give them the correct profession
+							villager.setVillagerData(data.withProfession(newProfession));
+
+							// Instantly assign the specific block to their brain so they "own" it
+							GlobalPos globalPos = GlobalPos.create(serverWorld.getRegistryKey(), jobPos);
+							villager.getBrain().remember(MemoryModuleType.JOB_SITE, globalPos);
+
+							VillagerExt ext = (VillagerExt) villager;
+							Vilid.LOGGER.info(ext.getLegalName() + " instantly claimed a job and became a " + newProfession.id());
+						}
+					}
+				}
+			}
+		}
+	}
+
+	@Inject(method = "tick", at = @At("TAIL"))
+	private void capitalistJobLossTick(CallbackInfo ci) {
+		VillagerEntity villager = (VillagerEntity) (Object) this;
+		if (villager.getWorld().isClient()) return;
+
+		// Only check every 2 seconds (40 ticks) to save server performance
+		if (villager.age % 40 == 0) {
+			VillagerData data = villager.getVillagerData();
+
+			if (data.getProfession() == ModProfessions.CAPITALIST) {
+				boolean hasValidFactory = false;
+
+				// Check the villager's brain to see where they think their job site is
+				Optional<GlobalPos> jobSiteOpt = villager.getBrain().getOptionalMemory(MemoryModuleType.JOB_SITE);
+
+				if (jobSiteOpt.isPresent()) {
+					GlobalPos globalPos = jobSiteOpt.get();
+					ServerWorld world = (ServerWorld) villager.getWorld();
+
+					// Ensure the block is in the same dimension
+					if (globalPos.dimension().equals(world.getRegistryKey())) {
+						BlockPos pos = globalPos.pos();
+
+						// Check if the block at their saved coordinates is STILL an Emerald Block
+						if (world.getBlockState(pos).isOf(Blocks.EMERALD_BLOCK)) {
+							hasValidFactory = true;
+						}
+					}
+				}
+
+				// If the emerald block is missing (or they never had one to begin with)
+				if (!hasValidFactory) {
+					// 1. Force them to become unemployed and reset to Level 1
+					villager.setVillagerData(data.withProfession(VillagerProfession.NONE).withLevel(1));
+
+					// 2. Wipe their memory of the old job site
+					villager.getBrain().forget(MemoryModuleType.JOB_SITE);
+
+					// 3. Clear their trades so they don't keep capitalist items as an unemployed villager
+					villager.getOffers().clear();
+
+					VillagerExt ext = (VillagerExt) villager;
+					Vilid.LOGGER.info(ext.getLegalName() + " lost their emerald block and became unemployed!");
+				}
+			}
+		}
+	}
+
+	@Shadow protected abstract void fillRecipes();
 
 	//become a pillager
 	public void criminalize(){
@@ -250,6 +412,7 @@ public abstract class VillagerEntityMixin implements VillagerExt{
 				&& !villager.getVillagerData().getProfession().equals(ModProfessions.WORKER);
 
 		boolean isGoodAtJob = isSelfEmployed && villager.getVillagerData().getLevel()>=4;
+		boolean isBaby = villager.isBaby();
 
 
 
@@ -258,7 +421,7 @@ public abstract class VillagerEntityMixin implements VillagerExt{
 		//bad things decrease mood outlook
 		if (isHomeless){moodDelta-=6;}
 		if (isUnemployed){moodDelta-=5;}
-		if (isOvercrowded){moodDelta-=3;}
+		if (isOvercrowded){moodDelta-=1;}
 
 		//good things increase mood outlook
 		if (isProtected){moodDelta+=1;}
@@ -266,6 +429,7 @@ public abstract class VillagerEntityMixin implements VillagerExt{
 		if (isRetarded){moodDelta+=2;}
 		if (isSelfEmployed){moodDelta+=1;}
 		if (isGoodAtJob){moodDelta+=1;}
+		if (isBaby){moodDelta+=6;}
 
 
 		return moodDelta;
@@ -421,6 +585,7 @@ public abstract class VillagerEntityMixin implements VillagerExt{
 		}
 		// both already have nations -> no-op for now, future popularity-comparison hook goes here
 	}
+
 
 	private void joinNation(VillagerExt ext, VillagerEntity v, String nation, NationData data) {
 		ext.getViewpoint().setNation(nation);
